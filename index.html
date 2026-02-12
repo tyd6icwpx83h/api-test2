@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>Advanced RESTful API Client</title>
+    <title>Professional API Tool</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -12,21 +12,20 @@
 <div class="app-container">
     <nav class="tab-nav">
         <button class="tab-btn active" data-target="main-tab">操作と結果表示</button>
-        <button class="tab-btn" data-target="settings-tab">API設定</button>
+        <button class="tab-btn" data-target="settings-tab">API詳細設定</button>
     </nav>
 
     <main class="tab-content-wrapper">
-        
         <section id="main-tab" class="tab-panel active">
             <div class="sticky-controls">
-                <button id="btn-send" class="btn btn-primary"><i class="fas fa-paper-plane"></i> 送信</button>
+                <button id="btn-send" class="btn btn-primary"><i class="fas fa-search"></i> 送信</button>
                 <button id="btn-csv" class="btn btn-secondary"><i class="fas fa-file-csv"></i> CSVダウンロード</button>
-                <button id="btn-update" class="btn btn-success" disabled><i class="fas fa-save"></i> 変更</button>
-                <button id="btn-clear" class="btn btn-danger"><i class="fas fa-trash"></i> 表示クリア</button>
+                <button id="btn-update" class="btn btn-success" disabled><i class="fas fa-save"></i> 変更内容を反映</button>
+                <button id="btn-clear" class="btn btn-danger"><i class="fas fa-trash"></i> クリア</button>
             </div>
 
             <div id="loader" class="loader hidden">
-                <i class="fas fa-circle-notch fa-spin"></i> API呼び出し中...
+                <i class="fas fa-spinner fa-spin"></i> API実行中...
             </div>
 
             <div id="response-container">
@@ -34,55 +33,55 @@
                 
                 <div id="search-filter-area" class="filter-panel hidden">
                     <div class="search-row">
-                        <i class="fas fa-search"></i>
-                        <input type="text" id="table-search" placeholder="結果内を検索...">
+                        <input type="text" id="table-search" placeholder="表示データをキーワード検索...">
                     </div>
                     <div id="column-selectors" class="checkbox-group"></div>
                 </div>
 
-                <div id="table-wrapper"></div>
+                <div class="scrollable-table-area">
+                    <div id="table-wrapper"></div>
+                </div>
+                
                 <div id="pagination-controls" class="pagination"></div>
-                <pre id="raw-output" class="raw-json"></pre>
+                <pre id="raw-output" class="raw-json hidden"></pre>
             </div>
         </section>
 
         <section id="settings-tab" class="tab-panel">
             <div class="config-grid">
-                <div class="config-item">
-                    <label>リクエストURL</label>
-                    <input type="text" id="api-url" placeholder="https://api.example.com/v1/resource">
+                <div class="config-section">
+                    <h3><i class="fas fa-paper-plane"></i> 送信設定 (基本)</h3>
+                    <label>取得用URL</label>
+                    <input type="text" id="url-send" placeholder="https://api.example.com/items">
+                    <label>メソッド</label>
+                    <input type="text" value="GET" readonly class="readonly-input">
                 </div>
 
-                <div class="config-item">
-                    <label>HTTPメソッド</label>
-                    <select id="api-method">
-                        <option value="GET">GET</option>
-                        <option value="HEAD">HEAD</option>
+                <div class="config-section">
+                    <h3><i class="fas fa-edit"></i> 変更設定 (更新)</h3>
+                    <label>更新用URL</label>
+                    <input type="text" id="url-update" placeholder="https://api.example.com/update">
+                    <label>メソッド</label>
+                    <select id="method-update">
                         <option value="POST">POST</option>
-                        <option value="PUT">PUT</option>
-                        <option value="DELETE">DELETE</option>
-                        <option value="CONNECT">CONNECT</option>
-                        <option value="OPTIONS">OPTIONS</option>
-                        <option value="TRACE">TRACE</option>
+                        <option value="PUT" selected>PUT</option>
                         <option value="PATCH">PATCH</option>
+                        <option value="DELETE">DELETE</option>
                     </select>
                 </div>
 
-                <div class="config-item">
+                <div class="config-section">
+                    <h3><i class="fas fa-cogs"></i> 共通設定</h3>
                     <label>認証方式</label>
                     <select id="auth-type">
                         <option value="none">認証なし</option>
                         <option value="bearer">Authorization (Bearer等)</option>
                         <option value="basic">HTTPベーシック認証</option>
                         <option value="apikey">APIキー認証</option>
-                        <option value="jwt">JWT認証</option>
-                        <option value="oauth">OAuth認証</option>
                     </select>
                     <div id="auth-fields" class="auth-sub-fields"></div>
-                </div>
 
-                <div class="config-item">
-                    <label>追加データ ("キー":"値")</label>
+                    <label class="mt-15">追加データ (Header/Body共通)</label>
                     <div id="kv-container">
                         <div class="kv-row">
                             <input type="text" placeholder="Key" class="kv-key">
@@ -90,7 +89,7 @@
                             <button class="btn-remove-row"><i class="fas fa-times"></i></button>
                         </div>
                     </div>
-                    <button id="btn-add-kv" class="btn btn-small"><i class="fas fa-plus"></i> データ追加</button>
+                    <button id="btn-add-kv" class="btn btn-small"><i class="fas fa-plus"></i> データ項目を追加</button>
                 </div>
             </div>
         </section>
