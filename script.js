@@ -1,197 +1,60 @@
-let responseData = [];      // 元のJSON
-let filteredData = [];      // 検索・フィルタ後
-let currentPage = 1;
-const PAGE_SIZE = 2000;
+:root {
+    --primary: #2563eb;
+    --success: #16a34a;
+    --danger: #dc2626;
+    --bg: #f3f4f6;
+    --border: #d1d5db;
+}
 
-$(document).ready(function() {
-    
-    // --- タブ切り替え ---
-    $('.tab-btn').click(function() {
-        $('.tab-btn').removeClass('active');
-        $(this).addClass('active');
-        const target = $(this).data('target');
-        $('.tab-panel').removeClass('active');
-        $('#' + target).addClass('active');
-    });
+body { font-family: 'Helvetica Neue', Arial, sans-serif; background: var(--bg); margin: 0; padding: 15px; }
+.app-container { max-width: 1400px; margin: 0 auto; background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow: hidden; display: flex; flex-direction: column; height: 95vh; }
 
-    // --- 設定画面: 追加データ行の操作 ---
-    $('#btn-add-kv').click(function() {
-        const row = `<div class="kv-row">
-            <input type="text" placeholder="Key" class="kv-key">
-            <input type="text" placeholder="Value" class="kv-value">
-            <button class="btn-remove-row"><i class="fas fa-times"></i></button>
-        </div>`;
-        $('#kv-container').append(row);
-    });
+/* タブ管理 */
+.tab-nav { display: flex; background: #f8fafc; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.tab-btn { padding: 15px 30px; border: none; cursor: pointer; background: none; font-weight: bold; color: #64748b; }
+.tab-btn.active { background: white; color: var(--primary); border-top: 3px solid var(--primary); }
+.tab-content-wrapper { flex-grow: 1; overflow-y: auto; position: relative; }
+.tab-panel { display: none; padding: 20px; }
+.tab-panel.active { display: block; }
 
-    $(document).on('click', '.btn-remove-row', function() {
-        $(this).closest('.kv-row').remove();
-    });
+/* コントロール */
+.sticky-controls { position: sticky; top: 0; background: white; padding-bottom: 15px; border-bottom: 1px solid #eee; margin-bottom: 15px; z-index: 100; display: flex; gap: 10px; }
+.btn { border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; color: white; font-size: 14px; font-weight: 500; }
+.btn:disabled { background: #e2e8f0 !important; cursor: not-allowed; color: #94a3b8; }
+.btn-primary { background: var(--primary); }
+.btn-secondary { background: #64748b; }
+.btn-success { background: var(--success); }
+.btn-danger { background: var(--danger); }
+.btn-small { padding: 5px 10px; font-size: 12px; margin-top: 5px; background: #94a3b8; }
 
-    // --- 認証方式の切り替え表示 ---
-    $('#auth-type').change(function() {
-        const val = $(this).val();
-        let html = '';
-        if (val === 'bearer') html = '<input type="text" id="auth-token" placeholder="Bearer {token}">';
-        if (val === 'basic') html = '<input type="text" id="auth-u" placeholder="User" style="width:48%"> <input type="password" id="auth-p" placeholder="Pass" style="width:48%; margin-left:2%">';
-        if (val === 'apikey') html = '<input type="text" id="auth-header" placeholder="Header Name (e.g. X-API-KEY)" style="width:48%"> <input type="text" id="auth-token" placeholder="Key Value" style="width:48%; margin-left:2%">';
-        if (val === 'jwt' || val === 'oauth') html = `<input type="text" id="auth-token" placeholder="${val.toUpperCase()} Token">`;
-        $('#auth-fields').html(html);
-    });
+/* 設定セクション */
+.config-section { border: 1px solid var(--border); padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+.config-section h3 { margin-top: 0; border-bottom: 2px solid var(--bg); padding-bottom: 10px; font-size: 1.1em; }
+input, select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 4px; margin-bottom: 10px; box-sizing: border-box; }
+.readonly-input { background: #f1f5f9; color: #64748b; font-weight: bold; }
+.kv-row { display: flex; gap: 5px; margin-bottom: 5px; }
+.btn-remove-row { background: none; border: none; color: var(--danger); cursor: pointer; }
 
-    // --- API送信処理 ---
-    $('#btn-send').click(async function() {
-        const url = $('#api-url').val();
-        const method = $('#api-method').val();
-        if (!url) return alert("URLを入力してください");
+/* テーブルのスクロール対応 */
+.scrollable-table-area { 
+    max-height: 600px; 
+    overflow: auto; 
+    border: 1px solid var(--border);
+    background: #fff;
+    position: relative;
+}
+table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: auto; }
+th, td { border: 1px solid var(--border); padding: 12px; text-align: left; min-width: 120px; }
+th { background: #f8fafc; position: sticky; top: 0; z-index: 10; border-bottom: 2px solid var(--border); }
+td { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 300px; }
 
-        showLoading(true);
-        resetDisplay();
+/* セルの状態色 */
+.cell-changed { background-color: #eff6ff !important; color: #1d4ed8; font-weight: bold; box-shadow: inset 0 0 0 1px #2563eb; }
+.cell-error { background-color: #fef2f2 !important; box-shadow: inset 0 0 0 1px var(--danger); }
 
-        // ヘッダー組み立て
-        const headers = { 'Content-Type': 'application/json' };
-        const authType = $('#auth-type').val();
-        if (authType === 'bearer') headers['Authorization'] = $('#auth-token').val();
-        else if (authType === 'basic') headers['Authorization'] = 'Basic ' + btoa($('#auth-u').val() + ':' + $('#auth-p').val());
-        else if (authType === 'apikey') headers[$('#auth-header').val()] = $('#auth-token').val();
-        else if (authType === 'jwt' || authType === 'oauth') headers['Authorization'] = 'Bearer ' + $('#auth-token').val();
-
-        // ボディ組み立て
-        let body = {};
-        $('.kv-row').each(function() {
-            const k = $(this).find('.kv-key').val();
-            const v = $(this).find('.kv-value').val();
-            if (k) body[k] = v;
-        });
-
-        try {
-            const fetchOptions = { method, headers };
-            if (['GET', 'HEAD'].indexOf(method) === -1) fetchOptions.body = JSON.stringify(body);
-
-            const res = await fetch(url, fetchOptions);
-            
-            if (res.status !== 200) {
-                showError(`Error ${res.status}: ${res.statusText}`);
-                const text = await res.text();
-                $('#raw-output').text(text).removeClass('hidden');
-            } else {
-                const json = await res.json();
-                $('#raw-output').text(JSON.stringify(json, null, 4)).removeClass('hidden');
-                initTable(json);
-            }
-        } catch (e) {
-            showError("接続エラー: " + e.message);
-        } finally {
-            showLoading(false);
-        }
-    });
-
-    // --- テーブル制御 ---
-    function initTable(data) {
-        responseData = Array.isArray(data) ? data : [data];
-        filteredData = [...responseData];
-        $('#search-filter-area').removeClass('hidden');
-        
-        // カラムフィルタ生成
-        const keys = Object.keys(responseData[0]);
-        $('#column-selectors').empty();
-        keys.forEach(k => {
-            $('#column-selectors').append(`<label><input type="checkbox" class="col-toggle" value="${k}" checked> ${k}</label>`);
-        });
-
-        renderTable();
-    }
-
-    function renderTable() {
-        const visibleCols = $('.col-toggle:checked').map((_, el) => $(el).val()).get();
-        const start = (currentPage - 1) * PAGE_SIZE;
-        const end = start + PAGE_SIZE;
-        const pageItems = filteredData.slice(start, end);
-
-        let html = '<table><thead><tr>';
-        visibleCols.forEach(c => html += `<th>${c}</th>`);
-        html += '</tr></thead><tbody>';
-
-        pageItems.forEach((row, i) => {
-            html += `<tr data-idx="${start + i}">`;
-            visibleCols.forEach(c => {
-                const val = row[c] === undefined ? "" : row[c];
-                html += `<td contenteditable="true" data-key="${c}">${val}</td>`;
-            });
-            html += '</tr>';
-        });
-        html += '</tbody></table>';
-
-        $('#table-wrapper').html(html);
-        updatePagination();
-    }
-
-    // 検索・フィルタリング
-    $(document).on('input', '#table-search', function() {
-        const query = $(this).val().toLowerCase();
-        filteredData = responseData.filter(row => 
-            Object.values(row).some(v => String(v).toLowerCase().includes(query))
-        );
-        currentPage = 1;
-        renderTable();
-    });
-
-    $(document).on('change', '.col-toggle', renderTable);
-
-    // 編集バリデーション
-    $(document).on('input', 'td[contenteditable="true"]', function() {
-        const $td = $(this);
-        const text = $td.text().trim();
-        const rowIdx = $td.closest('tr').data('idx');
-        const key = $td.data('key');
-        const original = String(filteredData[rowIdx][key] || "");
-
-        $td.removeClass('cell-changed cell-error');
-        if (text === "") $td.addClass('cell-error');
-        else if (text !== original) $td.addClass('cell-changed');
-
-        // 更新ボタン有効化チェック
-        const hasError = $('.cell-error').length > 0;
-        const hasChange = $('.cell-changed').length > 0;
-        $('#btn-update').prop('disabled', hasError || !hasChange);
-    });
-
-    // CSV出力
-    $('#btn-csv').click(function() {
-        if (filteredData.length === 0) return;
-        const keys = Object.keys(filteredData[0]);
-        const csv = [
-            keys.join(','),
-            ...filteredData.map(row => keys.map(k => `"${String(row[k]).replace(/"/g, '""')}"`).join(','))
-        ].join('\n');
-        
-        const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csv], { type: 'text/csv;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'api_export.csv';
-        a.click();
-    });
-
-    // --- 補助関数 ---
-    function showLoading(show) { $('#loader').toggleClass('hidden', !show); }
-    function showError(msg) { $('#error-box').text(msg).removeClass('hidden'); }
-    function resetDisplay() {
-        $('#error-box, #raw-output, #search-filter-area').addClass('hidden');
-        $('#table-wrapper, #pagination-controls').empty();
-        $('#btn-update').prop('disabled', true);
-    }
-    function updatePagination() {
-        const totalPages = Math.ceil(filteredData.length / PAGE_SIZE);
-        const $pg = $('#pagination-controls').empty();
-        if (totalPages <= 1) return;
-        for (let i = 1; i <= totalPages; i++) {
-            $pg.append(`<span class="page-link ${i === currentPage ? 'active' : ''}" data-p="${i}">${i}</span>`);
-        }
-    }
-    $(document).on('click', '.page-link', function() {
-        currentPage = parseInt($(this).data('p'));
-        renderTable();
-    });
-    $('#btn-clear').click(resetDisplay);
-});
+/* その他 */
+.loader { text-align: center; padding: 20px; color: var(--primary); font-size: 1.2em; }
+.error-msg { background: #fff1f2; color: #991b1b; padding: 15px; border-left: 4px solid var(--danger); margin: 10px 0; }
+.raw-json { background: #0f172a; color: #e2e8f0; padding: 15px; border-radius: 5px; overflow: auto; font-family: 'Courier New', monospace; }
+.hidden { display: none; }
+.mt-15 { margin-top: 15px; display: block; }
