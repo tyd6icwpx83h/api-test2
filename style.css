@@ -1,56 +1,58 @@
 :root {
-    --primary-color: #007bff;
-    --success-color: #28a745;
-    --danger-color: #dc3545;
-    --bg-color: #f8f9fa;
-    --border-color: #ddd;
+    --primary: #2563eb;
+    --success: #16a34a;
+    --danger: #dc2626;
+    --bg: #f3f4f6;
+    --border: #d1d5db;
 }
 
-body { font-family: sans-serif; background: var(--bg-color); margin: 20px; }
-.container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; color: #1f2937; }
+.app-container { max-width: 1200px; margin: 0 auto; background: white; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); overflow: hidden; }
 
-/* タブ切り替え */
-.tabs { border-bottom: 2px solid var(--border-color); margin-bottom: 20px; }
-.tab-link { padding: 10px 20px; border: none; cursor: pointer; background: none; font-size: 16px; }
-.tab-link.active { border-bottom: 3px solid var(--primary-color); font-weight: bold; }
-.tab-content { display: none; }
-.tab-content.active { display: block; }
+/* タブ */
+.tab-nav { display: flex; background: #e5e7eb; border-bottom: 1px solid var(--border); }
+.tab-btn { padding: 15px 25px; border: none; cursor: pointer; background: none; font-weight: 600; color: #6b7280; }
+.tab-btn.active { background: white; color: var(--primary); border-top: 3px solid var(--primary); }
+.tab-panel { display: none; padding: 20px; }
+.tab-panel.active { display: block; }
 
-/* フォーム要素 */
-.config-section { margin-bottom: 20px; padding: 15px; border: 1px solid var(--border-color); border-radius: 4px; }
-.full-width { width: 100%; box-sizing: border-box; padding: 8px; margin-bottom: 10px; }
-.mt-10 { margin-top: 10px; }
-.data-row { display: flex; gap: 10px; margin-bottom: 5px; }
+/* コントロールエリア */
+.sticky-controls { position: sticky; top: 0; background: white; padding-bottom: 15px; border-bottom: 1px solid #eee; margin-bottom: 20px; z-index: 10; display: flex; gap: 10px; }
+.btn { border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; color: white; transition: 0.2s; font-size: 14px; }
+.btn:disabled { background: #cbd5e1 !important; cursor: not-allowed; }
+.btn-primary { background: var(--primary); }
+.btn-secondary { background: #4b5563; }
+.btn-success { background: var(--success); }
+.btn-danger { background: var(--danger); }
+.btn-small { padding: 5px 10px; font-size: 12px; margin-top: 10px; background: #9ca3af; }
 
-/* ボタン */
-.btn { padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; color: white; margin-right: 5px; }
-.btn:disabled { background: #ccc !important; cursor: not-allowed; }
-.primary { background: var(--primary-color); }
-.secondary { background: #6c757d; }
-.success { background: var(--success-color); }
-.danger { background: var(--danger-color); }
-.small { padding: 4px 8px; font-size: 12px; }
+/* 設定画面 */
+.config-grid { display: flex; flex-direction: column; gap: 20px; }
+.config-item label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 14px; }
+input[type="text"], input[type="password"], select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; box-sizing: border-box; }
+.kv-row { display: flex; gap: 8px; margin-bottom: 8px; }
+.btn-remove-row { background: none; border: none; color: var(--danger); cursor: pointer; }
 
 /* レスポンス表示 */
-#loading { padding: 20px; text-align: center; font-weight: bold; }
-.error-msg { color: var(--danger-color); border: 1px solid var(--danger-color); padding: 10px; border-radius: 4px; background: #fff5f5; }
-pre { background: #272822; color: #f8f8f2; padding: 15px; border-radius: 4px; overflow-x: auto; }
+.loader { text-align: center; padding: 40px; font-size: 1.2em; color: var(--primary); }
+.error-msg { background: #fee2e2; border-left: 5px solid var(--danger); padding: 15px; margin: 10px 0; color: #991b1b; }
+.raw-json { background: #1e293b; color: #f8fafc; padding: 15px; border-radius: 6px; overflow-x: auto; white-space: pre-wrap; font-family: monospace; }
 
-/* テーブル */
-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-th, td { border: 1px solid var(--border-color); padding: 8px; text-align: left; }
-th { background: #eee; }
-.cell-changed { background-color: #e7f3ff !important; border: 1px solid blue !important; }
-.cell-empty { background-color: #fff0f0 !important; border: 1px solid red !important; }
+/* テーブルとページング */
+#table-wrapper { overflow-x: auto; margin-top: 20px; }
+table { width: 100%; border-collapse: collapse; min-width: 600px; font-size: 14px; }
+th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+th { background: #f9fafb; position: sticky; top: 0; }
+td[contenteditable="true"]:focus { outline: 2px solid var(--primary); background: white; }
 
-/* 検索・フィルタ */
-.search-box { margin: 15px 0; }
-.search-box input { width: 300px; padding: 8px; }
-.filter-box { margin-bottom: 10px; font-size: 14px; }
+/* セルの状態色 */
+.cell-changed { background-color: #dbeafe !important; color: #1e40af; font-weight: bold; }
+.cell-error { background-color: #fee2e2 !important; border: 1px solid var(--danger) !important; }
 
-/* ページング */
-.pagination-container { margin-top: 15px; display: flex; gap: 5px; }
-.page-btn { padding: 5px 10px; border: 1px solid var(--border-color); cursor: pointer; }
-.page-btn.active { background: var(--primary-color); color: white; }
-
+/* フィルタ */
+.filter-panel { background: #f9fafb; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+.checkbox-group { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 10px; }
+.pagination { display: flex; gap: 5px; margin-top: 15px; flex-wrap: wrap; }
+.page-link { padding: 5px 10px; border: 1px solid var(--border); cursor: pointer; border-radius: 4px; }
+.page-link.active { background: var(--primary); color: white; border-color: var(--primary); }
 .hidden { display: none; }
