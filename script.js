@@ -26,19 +26,36 @@ $(document).on('click', '.btn-remove', function() {
     $(this).parent().remove();
 });
 
-// 認証UI切り替え
+// --- UI制御: 認証入力欄の切り替え ---
 $('#auth-type').on('change', function() {
     const type = $(this).val();
     let html = '';
-    if (type === 'basic') {
-        html = '<input type="text" id="auth-u" placeholder="ユーザー名"> <input type="password" id="auth-p" placeholder="パスワード">';
-    } else if (type === 'apikey' || type === 'jwt' || type === 'oauth') {
-        html = `<input type="text" id="auth-token" placeholder="${type.toUpperCase()} トークン/キー" class="full-width">`;
+    
+    switch(type) {
+        case 'bearer':
+            html = '<input type="text" id="auth-token" placeholder="Bearer {token}" class="full-width">';
+            break;
+        case 'basic':
+            html = `
+                <input type="text" id="auth-u" placeholder="ユーザー名" style="width:45%">
+                <input type="password" id="auth-p" placeholder="パスワード" style="width:45%">
+            `;
+            break;
+        case 'apikey':
+            html = `
+                <input type="text" id="auth-key-name" placeholder="ヘッダー名 (例: X-API-KEY)" style="width:45%">
+                <input type="text" id="auth-token" placeholder="キーの値" style="width:45%">
+            `;
+            break;
+        case 'jwt':
+        case 'oauth':
+            html = `<input type="text" id="auth-token" placeholder="${type.toUpperCase()} トークン" class="full-width">`;
+            break;
     }
     $('#auth-inputs').html(html);
 });
 
-// --- API送信処理 ---
+// --- API送信処理のアップグレード ---
 $('#btn-send').on('click', async function() {
     const url = $('#api-url').val();
     const method = $('#api-method').val();
@@ -46,29 +63,50 @@ $('#btn-send').on('click', async function() {
 
     $('#loading').removeClass('hidden');
     $('#error-display').addClass('hidden');
-    $('#response-area').find('table, .pagination-container, pre').empty();
-    $('#search-filter-area').addClass('hidden');
+    
+    // ヘッダーの準備
+    let headers = {
+        'Content-Type': 'application/json'
+    };
 
-    // 追加データのパース
-    let payload = {};
+    // 認証情報の付与
+    const authType = $('#auth-type').val();
+    if (authType === 'bearer') {
+        headers['Authorization'] = $('#auth-token').val();
+    } else if (authType === 'basic') {
+        const u = $('#auth-u').val();
+        const p = $('#auth-p').val();
+        headers['Authorization'] = 'Basic ' + btoa(unescape(encodeURIComponent(u + ':' + p)));
+    } else if (authType === 'apikey') {
+        const keyName = $('#auth-key-name').val();
+        headers[keyName] = $('#auth-token').val();
+    } else if (authType === 'jwt' || authType === 'oauth') {
+        headers['Authorization'] = 'Bearer ' + $('#auth-token').val();
+    }
+
+    // 追加データ（キー：値）をヘッダーまたはボディに反映させるロジック
+    // ※ここでは簡易的にボディ用データとしてパースします
+    let bodyData = {};
     $('.data-row').each(function() {
         const k = $(this).find('.data-key').val();
         const v = $(this).find('.data-value').val();
-        if (k) payload[k] = v;
+        if (k) bodyData[k] = v;
     });
 
     try {
         const options = {
             method: method,
-            headers: { 'Content-Type': 'application/json' }
+            headers: headers
         };
-        if (method !== 'GET' && method !== 'HEAD') {
-            options.body = JSON.stringify(payload);
+
+        // GET/HEAD以外はボディを付与
+        if (['GET', 'HEAD'].indexOf(method) === -1) {
+            options.body = JSON.stringify(bodyData);
         }
 
         const response = await fetch(url, options);
+        // ...（以下、前回のレスポンス表示処理と同じ）
         const status = response.status;
-
         if (status !== 200) {
             $('#error-display').text(`Error: ${status} ${response.statusText}`).removeClass('hidden');
             const text = await response.text();
@@ -78,7 +116,7 @@ $('#btn-send').on('click', async function() {
             handleSuccessResponse(data);
         }
     } catch (err) {
-        $('#error-display').text(`Request Failed: ${err.message}`).removeClass('hidden');
+        $('#error-display').text(`送信エラー: ${err.message}`).removeClass('hidden');
     } finally {
         $('#loading').addClass('hidden');
     }
@@ -208,4 +246,5 @@ $('#btn-clear').on('click', function() {
 $('#btn-update').on('click', function() {
     alert("変更を保存しました（フロントエンドのメモリ内）");
     // ここで実際のPUT/PATCHリクエストを実装可能
+
 });
