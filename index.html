@@ -64,18 +64,18 @@
             </select>
         </section>
 
-        <section class="config-section">
-            <h3>認証設定</h3>
-            <select id="auth-type">
-                <option value="none">認証なし</option>
-                <option value="basic">HTTPベーシック認証</option>
-                <option value="apikey">APIキー認証</option>
-                <option value="jwt">JWT認証</option>
-                <option value="oauth">OAuth認証</option>
-            </select>
-            <div id="auth-inputs" class="mt-10">
-                </div>
-        </section>
+　　　　　<section class="config-section">
+  　　　　　  <h3>認証設定</h3>
+　　　　　    <select id="auth-type">
+　　　　　        <option value="none">認証なし</option>
+　　　　　        <option value="bearer">Authorization (Bearer等)</option> <option value="basic">HTTPベーシック認証</option>
+　　　　　        <option value="apikey">APIキー認証</option>
+　　　　　        <option value="jwt">JWT認証</option>
+　　　　　        <option value="oauth">OAuth認証</option>
+　　　　　    </select>
+　　　　　    <div id="auth-inputs" class="mt-10">
+　　　　　        </div>
+　　　　　</section>
 
         <section class="config-section">
             <h3>追加データ (JSON Payload / Headers)</h3>
@@ -93,4 +93,5 @@
 
 <script src="script.js"></script>
 </body>
+
 </html>
