@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RESTful API Client</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+
+<div class="container">
+    <div class="tabs">
+        <button class="tab-link active" onclick="openTab('main-tab')">操作・結果</button>
+        <button class="tab-link" onclick="openTab('settings-tab')">API設定</button>
+    </div>
+
+    <div id="main-tab" class="tab-content active">
+        <div class="control-panel">
+            <button id="btn-send" class="btn primary"><i class="fas fa-paper-plane"></i> 送信</button>
+            <button id="btn-csv" class="btn secondary"><i class="fas fa-file-csv"></i> CSVダウンロード</button>
+            <button id="btn-update" class="btn success" disabled><i class="fas fa-save"></i> 変更</button>
+            <button id="btn-clear" class="btn danger"><i class="fas fa-trash"></i> 表示クリア</button>
+        </div>
+
+        <div id="loading" class="hidden">
+            <i class="fas fa-spinner fa-spin"></i> レスポンス待機中...
+        </div>
+
+        <div id="search-filter-area" class="hidden">
+            <div class="search-box">
+                <input type="text" id="table-search" placeholder="テーブル内を部分一致検索...">
+            </div>
+            <div id="column-filters" class="filter-box">
+                </div>
+        </div>
+
+        <div id="response-area">
+            <div id="error-display" class="error-msg hidden"></div>
+            <div id="table-container"></div>
+            <pre id="raw-response"></pre>
+            <div id="pagination" class="pagination-container"></div>
+        </div>
+    </div>
+
+    <div id="settings-tab" class="tab-content">
+        <section class="config-section">
+            <h3>基本設定</h3>
+            <label>URL:</label>
+            <input type="text" id="api-url" placeholder="https://api.example.com/data" class="full-width">
+            
+            <label>メソッド:</label>
+            <select id="api-method">
+                <option value="GET">GET</option>
+                <option value="POST">POST</option>
+                <option value="PUT">PUT</option>
+                <option value="DELETE">DELETE</option>
+                <option value="PATCH">PATCH</option>
+                <option value="HEAD">HEAD</option>
+                <option value="OPTIONS">OPTIONS</option>
+                <option value="CONNECT">CONNECT</option>
+                <option value="TRACE">TRACE</option>
+            </select>
+        </section>
+
+        <section class="config-section">
+            <h3>認証設定</h3>
+            <select id="auth-type">
+                <option value="none">認証なし</option>
+                <option value="basic">HTTPベーシック認証</option>
+                <option value="apikey">APIキー認証</option>
+                <option value="jwt">JWT認証</option>
+                <option value="oauth">OAuth認証</option>
+            </select>
+            <div id="auth-inputs" class="mt-10">
+                </div>
+        </section>
+
+        <section class="config-section">
+            <h3>追加データ (JSON Payload / Headers)</h3>
+            <div id="additional-data-list">
+                <div class="data-row">
+                    <input type="text" placeholder="キー" class="data-key">
+                    <input type="text" placeholder="値" class="data-value">
+                    <button class="btn-remove"><i class="fas fa-minus"></i></button>
+                </div>
+            </div>
+            <button id="btn-add-row" class="btn small"><i class="fas fa-plus"></i> 追加</button>
+        </section>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
